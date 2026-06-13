@@ -1260,10 +1260,6 @@ header .header-logo a {
   padding: 0;
   outline: 0;
   border: none;
-  width: 57px;
-  height: 27px;
-  /* background: url("../images/logo.png") no-repeat center; */
-  background-size: 57px 27px;
   font: 0/0 a;
   text-shadow: none;
   color: transparent;
@@ -1489,9 +1485,7 @@ header .header-logo a {
  * ------------------------------------------------------------------- */
 @media only screen and (max-width: 768px) {
   header .header-logo a {
-    width: 51px;
-    height: 24px;
-    background-size: 51px 24px;
+    /* responsive sizing handled by img tag */
   }
 }
 @media only screen and (max-width: 400px) {
