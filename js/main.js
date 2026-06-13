@@ -300,48 +300,46 @@
 
   /* Contact Form
    * ------------------------------------------------------ */
-   var ssContactForm = function() {   	
+   var ssContactForm = function() {
 
-   	/* local validation */   	
-		$('#contactForm').validate({
+      /* local validation + Formspree AJAX submission */
+      $('#contactForm').validate({
 
-			/* submit via ajax */
-			submitHandler: function(form) {				
-				var sLoader = $('#submit-loader');			
+         submitHandler: function(form) {
+            var sLoader    = $('#submit-loader'),
+                $form      = $(form),
+                formData   = new FormData(form);
 
-				$.ajax({   	
-			      type: "POST",
-			      url: "inc/sendEmail.php",
-			      data: $(form).serialize(),
+            sLoader.fadeIn();
 
-			      beforeSend: function() { 
-			      	sLoader.fadeIn(); 
-			      },
-			      success: function(msg) {
-		            // Message was sent
-		            if (msg == 'OK') {
-		            	sLoader.fadeOut(); 
-		               $('#message-warning').hide();
-		               $('#contactForm').fadeOut();
-		               $('#message-success').fadeIn();   
-		            }
-		            // There was an error
-		            else {
-		            	sLoader.fadeOut(); 
-		               $('#message-warning').html(msg);
-			            $('#message-warning').fadeIn();
-		            }
-			      },
-			      error: function() {
-			      	sLoader.fadeOut(); 
-			      	$('#message-warning').html("Something went wrong. Please try again.");
-			         $('#message-warning').fadeIn();
-			      }
-		      });    		
-	  		}
+            fetch('https://formspree.io/f/mlgkplad', {
+               method:  'POST',
+               body:    formData,
+               headers: { 'Accept': 'application/json' }
+            })
+            .then(function(response) {
+               sLoader.fadeOut();
+               if (response.ok) {
+                  $('#message-warning').hide();
+                  $form.fadeOut();
+                  $('#message-success').fadeIn();
+               } else {
+                  return response.json().then(function(data) {
+                     var msg = (data.errors && data.errors.length)
+                        ? data.errors.map(function(e){ return e.message; }).join(', ')
+                        : 'Something went wrong. Please try again.';
+                     $('#message-warning').html(msg).fadeIn();
+                  });
+               }
+            })
+            .catch(function() {
+               sLoader.fadeOut();
+               $('#message-warning').html('Something went wrong. Please try again.').fadeIn();
+            });
+         }
 
-		});
-   };	
+      });
+   };
 
 
   /* AjaxChimp
