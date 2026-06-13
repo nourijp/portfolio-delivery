@@ -298,46 +298,66 @@
 	};
 
 
-  /* Contact Form
+  /* Contact Form — Formspree AJAX
    * ------------------------------------------------------ */
    var ssContactForm = function() {
 
-      /* local validation + Formspree AJAX submission */
-      $('#contactForm').validate({
+      var form    = document.getElementById('contactForm');
+      if (!form) return;
 
-         submitHandler: function(form) {
-            var sLoader    = $('#submit-loader'),
-                $form      = $(form),
-                formData   = new FormData(form);
+      form.addEventListener('submit', function(e) {
+         e.preventDefault();
 
-            sLoader.fadeIn();
+         var sLoader  = $('#submit-loader');
+         var $warning = $('#message-warning');
+         var $success = $('#message-success');
+         var $form    = $(form);
 
-            fetch('https://formspree.io/f/mlgkplad', {
-               method:  'POST',
-               body:    formData,
-               headers: { 'Accept': 'application/json' }
-            })
-            .then(function(response) {
-               sLoader.fadeOut();
-               if (response.ok) {
-                  $('#message-warning').hide();
-                  $form.fadeOut();
-                  $('#message-success').fadeIn();
-               } else {
-                  return response.json().then(function(data) {
-                     var msg = (data.errors && data.errors.length)
-                        ? data.errors.map(function(e){ return e.message; }).join(', ')
-                        : 'Something went wrong. Please try again.';
-                     $('#message-warning').html(msg).fadeIn();
-                  });
-               }
-            })
-            .catch(function() {
-               sLoader.fadeOut();
-               $('#message-warning').html('Something went wrong. Please try again.').fadeIn();
-            });
+         // Basic client-side check
+         var name    = form.querySelector('[name="name"]').value.trim();
+         var email   = form.querySelector('[name="email"]').value.trim();
+         var message = form.querySelector('[name="message"]').value.trim();
+
+         if (!name || !email || !message) {
+            $warning.html('Please fill in all required fields.').fadeIn();
+            return;
          }
 
+         sLoader.fadeIn();
+         $warning.hide();
+
+         fetch('https://formspree.io/f/mlgkplad', {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+               'Accept':       'application/json'
+            },
+            body: JSON.stringify({
+               name:     name,
+               email:    email,
+               subject:  form.querySelector('[name="subject"]') ? form.querySelector('[name="subject"]').value : '',
+               message:  message
+            })
+         })
+         .then(function(res) {
+            sLoader.fadeOut();
+            if (res.ok) {
+               $warning.hide();
+               $form.fadeOut();
+               $success.fadeIn();
+            } else {
+               return res.json().then(function(data) {
+                  var msg = (data.errors && data.errors.length)
+                     ? data.errors.map(function(e){ return e.message; }).join(', ')
+                     : 'Submission failed. Please try again.';
+                  $warning.html(msg).fadeIn();
+               });
+            }
+         })
+         .catch(function(err) {
+            sLoader.fadeOut();
+            $warning.html('Network error. Please check your connection and try again.').fadeIn();
+         });
       });
    };
 
